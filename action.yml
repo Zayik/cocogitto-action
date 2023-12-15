@@ -33,11 +33,17 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Set environment variables (Windows-safe paths)
+      run: |
+        # Convert to forward slashes
+        echo "GITHUB_ACTION_PATH=$(echo $GITHUB_ACTION_PATH | sed 's/\\/\//g')" >> $GITHUB_ENV
+      shell: bash
+
     - run: echo Installing cocogitto
       shell: bash
 
     - id: install
-      run: ${{ github.action_path }}/install.sh
+      run: $GITHUB_ACTION_PATH/install.sh $GITHUB_ACTION_PATH
       shell: bash
 
     - run: echo Running cocogitto
@@ -46,14 +52,16 @@ runs:
     - id: add-to-path
       shell: sh
       run: |
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        echo "Bin path from workflow: $GITHUB_ACTION_PATH/.local/bin"
+        echo "$GITHUB_ACTION_PATH/.local/bin" >> $GITHUB_PATH
 
     - id: cog
       run: |
-        ${{ github.action_path }}/cog.sh    \
+        $GITHUB_ACTION_PATH/cog.sh    \
         ${{ inputs.check }} \
         ${{ inputs.check-latest-tag-only }} \
         ${{ inputs.release }}               \
         ${{ inputs.git-user }}              \
-        ${{ inputs.git-user-email }}
+        ${{ inputs.git-user-email }} \
+        "$GITHUB_ACTION_PATH/cog.exe"
       shell: bash
